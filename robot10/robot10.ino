@@ -20,15 +20,15 @@ void messageCb( const geometry_msgs::Twist& msg){
     analogWrite(reverseLeft, 0);
     analogWrite(reverseRight, 0);
     analogWrite(forwardLeft, 255);
-    analogWrite(forwardLeft, 255);
+    analogWrite(forwardRight, 255);
   } else if(msg.linear.x < 0) {
     analogWrite(forwardLeft, 0);
-    analogWrite(forwardLeft, 0);
+    analogWrite(forwardRight, 0);
     analogWrite(reverseLeft, 255);
     analogWrite(reverseRight, 255);
   } else {
     analogWrite(forwardLeft, 0);
-    analogWrite(forwardLeft, 0);
+    analogWrite(forwardRight, 0);
     analogWrite(reverseLeft, 0);
     analogWrite(reverseRight, 0);
   }
