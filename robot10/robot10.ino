@@ -42,12 +42,22 @@ void messageCb( const geometry_msgs::Twist& msg){
     analogWrite(forwardRight, 0);
     analogWrite(reverseLeft, 255);
     analogWrite(reverseRight, 255);
-  } else {
+  } else if(msg.linear.x == 0){
     analogWrite(forwardLeft, 0);
     analogWrite(forwardRight, 0);
     analogWrite(reverseLeft, 0);
     analogWrite(reverseRight, 0);
-  }
+  } else if(msg.angular.z < 0){
+    analogWrite(forwardLeft, 127);
+    analogWrite(forwardRight, 255);
+    analogWrite(reverseLeft, 0);
+    analogWrite(reverseRight, 0);
+  } else if(msg.angular.z > 0){
+    analogWrite(forwardLeft, 255);
+    analogWrite(forwardRight, 127);
+    analogWrite(reverseLeft, 0);
+    analogWrite(reverseRight, 0);
+  } 
 }
 
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &messageCb );
