@@ -31,6 +31,7 @@ int reverseLeft = 7;
 int reverseRight = 3;
 int enableLeft = 25;
 int enableRight = 24;
+double time;
 
 
 void messageCb( const geometry_msgs::Twist& msg){
@@ -63,19 +64,32 @@ void setup()
   pinMode(enableLeft, OUTPUT);
   pinMode(enableRight, OUTPUT);
   pinMode(13, OUTPUT);
+  
+  digitalWrite(enableLeft, HIGH);
+  digitalWrite(enableRight, HIGH);
+  
   nh.initNode();
   nh.subscribe(sub);
   
   startTimer1(1000L); //Prepare timer1 to check for messages every 1ms
+  time = millis();
 }
 
 void loop()
 {  
+  double currentTime = millis();
+  //if nothing happened for 1 second.
+  if (currentTime - time > 1000) {
+    digitalWrite(enableLeft, LOW);
+    digitalWrite(enableRight, LOW);
+  }
+  
 }
 
 ISR(timer1Event)
 {
   resetTimer1(); //reset timer1
+  time = millis();
   np.spinOnce(); //look for twist messages and call callback
 }
 
