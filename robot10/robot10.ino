@@ -1,3 +1,5 @@
+#include <Timer1.h>
+
 /* 
  * rosserial Subscriber Example
  * Blinks an LED on callback
@@ -63,11 +65,17 @@ void setup()
   pinMode(13, OUTPUT);
   nh.initNode();
   nh.subscribe(sub);
+  
+  startTimer1(1000L); //Prepare timer1 to check for messages every 1ms
 }
 
 void loop()
 {  
-  nh.spinOnce();
-  delay(1);
+}
+
+ISR(timer1Event)
+{
+  resetTimer1(); //reset timer1
+  np.spinOnce(); //look for twist messages and call callback
 }
 
