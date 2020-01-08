@@ -34,6 +34,8 @@ double time;
 int enableLeft = 24;
 int enableRight = 25;
 
+int triggerPin = 23;
+int echoPin = 22;
 
 void messageCb( const geometry_msgs::Twist& msg){
   if(msg.linear.x > 0) {
@@ -90,7 +92,23 @@ void setup()
 }
 
 void loop()
-{  
+{    
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+// Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+// Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH);
+// Calculating the distance
+  distance= duration*0.034/2;
+  
+  if (distance >= 5) {
+    digitalWrite(enableLeft, LOW);
+    digitalWrite(enableRight, LOW);
+  }
+    
   double currentTime = millis();
   //if nothing happened for 1 second.
   if (currentTime - time > 1000) {
