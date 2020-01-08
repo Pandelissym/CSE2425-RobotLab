@@ -1,10 +1,4 @@
 #include <Timer1.h>
-
-/* 
- * rosserial Subscriber Example
- * Blinks an LED on callback
- */
-
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
 #include <SoftwareSerial.h>
@@ -76,26 +70,28 @@ void setup()
   pinMode(enableRight, OUTPUT);
   pinMode(13, OUTPUT);
   
+   nh.initNode();
+  nh.subscribe(sub);
+  
   digitalWrite(enableLeft, HIGH);
   digitalWrite(enableRight, HIGH);
   
-  nh.initNode();
-  nh.subscribe(sub);
+     digitalWrite(13, LOW);
+
   
   startTimer1(1000L); //Prepare timer1 to check for messages every 1ms
   time = millis();
-  digitalWrite(enableRight, HIGH);
-  digitalWrite(enableLeft, HIGH);
-
 }
 
 void loop()
-{  
+{ 
+ nh.spinOnce(); 
   double currentTime = millis();
-  //if nothing happened for 1 second.
-  if (currentTime - time > 1000) {
+  //if nothing happened for 10 second.
+  if (currentTime - time > 10000) {
     digitalWrite(enableLeft, LOW);
     digitalWrite(enableRight, LOW);
+    digitalWrite(13, HIGH);
   }
   
 }
@@ -104,6 +100,6 @@ ISR(timer1Event)
 {
   resetTimer1(); //reset timer1
   time = millis();
-  np.spinOnce(); //look for twist messages and call callback
+  nh.spinOnce(); //look for twist messages and call callback
 }
 
