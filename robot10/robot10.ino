@@ -1,3 +1,5 @@
+#include <Timer1.h>
+
 /* 
  * rosserial Subscriber Example
  * Blinks an LED on callback
@@ -27,6 +29,8 @@ int forwardLeft = 6;
 int forwardRight = 2;
 int reverseLeft = 7;
 int reverseRight = 3;
+
+double time;
 int enableLeft = 24;
 int enableRight = 25;
 
@@ -71,9 +75,15 @@ void setup()
   pinMode(enableLeft, OUTPUT);
   pinMode(enableRight, OUTPUT);
   pinMode(13, OUTPUT);
+  
+  digitalWrite(enableLeft, HIGH);
+  digitalWrite(enableRight, HIGH);
+  
   nh.initNode();
   nh.subscribe(sub);
   
+  startTimer1(1000L); //Prepare timer1 to check for messages every 1ms
+  time = millis();
   digitalWrite(enableRight, HIGH);
   digitalWrite(enableLeft, HIGH);
 
@@ -81,7 +91,19 @@ void setup()
 
 void loop()
 {  
-  nh.spinOnce();
-  delay(1);
+  double currentTime = millis();
+  //if nothing happened for 1 second.
+  if (currentTime - time > 1000) {
+    digitalWrite(enableLeft, LOW);
+    digitalWrite(enableRight, LOW);
+  }
+  
+}
+
+ISR(timer1Event)
+{
+  resetTimer1(); //reset timer1
+  time = millis();
+  np.spinOnce(); //look for twist messages and call callback
 }
 
