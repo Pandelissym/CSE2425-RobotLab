@@ -9,26 +9,26 @@
 
 
 // USB-config
-//ros::NodeHandle  nh;
+ros::NodeHandle  nh;
 
 // Start Bluetooth-config
 // Comment below if needed to switch to USB-connection
 // If uncommented, comment USB-config
 
-class NewHardware : public ArduinoHardware {
-  public: NewHardware():ArduinoHardware(&Serial1, 57600){};
-}; 
-ros::NodeHandle_<NewHardware> nh;
+//class NewHardware : public ArduinoHardware {
+//  public: NewHardware():ArduinoHardware(&Serial1, 57600){};
+//}; 
+//ros::NodeHandle_<NewHardware> nh;
 
 // End Bluetooth-config
 
 
-int forwardLeft = 2;
-int forwardRight = 6;
+int forwardLeft = 6;
+int forwardRight = 2;
 int reverseLeft = 7;
 int reverseRight = 3;
-int enableLeft = 25;
-int enableRight = 24;
+int enableLeft = 24;
+int enableRight = 25;
 
 
 void messageCb( const geometry_msgs::Twist& msg){
@@ -63,6 +63,10 @@ void setup()
   pinMode(13, OUTPUT);
   nh.initNode();
   nh.subscribe(sub);
+  
+  digitalWrite(enableRight, HIGH);
+  digitalWrite(enableLeft, HIGH);
+
 }
 
 void loop()
