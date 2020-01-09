@@ -1,3 +1,4 @@
+
 #include <Timer1.h>
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
@@ -7,16 +8,17 @@
 // USB-config
 ros::NodeHandle  nh;
 
-// Start Bluetooth-config
-// Comment below if needed to switch to USB-connection
-// If uncommented, comment USB-config
+
+//// Start Bluetooth-config
+//// Comment below if needed to switch to USB-connection
+//// If uncommented, comment USB-config
 
 //class NewHardware : public ArduinoHardware {
 //  public: NewHardware():ArduinoHardware(&Serial1, 57600){};
 //}; 
 //ros::NodeHandle_<NewHardware> nh;
 
-// End Bluetooth-config
+//// End Bluetooth-config
 
 
 int forwardLeft = 6;
@@ -30,43 +32,85 @@ int triggerPin = 23;
 int echoPin = 22;
 boolean stop_moving = false;
 boolean isFirst = true;
+int distance = 0;
 
-void messageCb( const geometry_msgs::Twist& msg){
+
+// HCSR-04 implementation
+
+double measureDistanceCm(int triggerPin, int echoPin) {
+    // Make sure that trigger pin is LOW.
+    digitalWrite(triggerPin, LOW);
+    delayMicroseconds(2);
+    // Hold trigger for 10 microseconds, which is signal for sensor to measure distance.
+    digitalWrite(triggerPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(triggerPin, LOW);
+    // Measure the length of echo signal, which is equal to the time needed for sound to go there and back.
+    unsigned long durationMicroSec = pulseIn(echoPin, HIGH);
+    double distanceCm = durationMicroSec / 2.0 * 0.0343;
+    if (distanceCm == 0 || distanceCm > 400) {
+        return -1.0 ;
+    } else {
+        return distanceCm;
+    }
+}
+
+void goForward() {
+  analogWrite(reverseLeft, 0);
+  analogWrite(reverseRight, 0);
+  analogWrite(forwardLeft, 255);
+  analogWrite(forwardRight, 255);
+}
+
+void goBackward() {
+  analogWrite(forwardLeft, 0);
+  analogWrite(forwardRight, 0);
+  analogWrite(reverseLeft, 255);
+  analogWrite(reverseRight, 255);
+}
+
+void goLeft() {
+  analogWrite(forwardLeft, 62);
+  analogWrite(forwardRight, 255);
+  analogWrite(reverseLeft, 0);
+  analogWrite(reverseRight, 0);
+}
+
+void goRight() {
+  analogWrite(forwardLeft, 255);
+  analogWrite(forwardRight, 62);
+  analogWrite(reverseLeft, 0);
+  analogWrite(reverseRight, 0);  
+}
+
+void stopMoving() {
+  analogWrite(forwardLeft, 0);
+  analogWrite(forwardRight, 0);
+  analogWrite(reverseLeft, 0);
+  analogWrite(reverseRight, 0);
+}
+
+void messageCb( const geometry_msgs::Twist& msg) {
   resetTimer1();
     
   if(msg.linear.x > 0) {
-    analogWrite(reverseLeft, 0);
-    analogWrite(reverseRight, 0);
-    analogWrite(forwardLeft, 255);
-    analogWrite(forwardRight, 255);
+    goForward();
   } else if(msg.linear.x < 0) {
-    analogWrite(forwardLeft, 0);
-    analogWrite(forwardRight, 0);
-    analogWrite(reverseLeft, 255);
-    analogWrite(reverseRight, 255);
-  }  else if(msg.angular.z > 0){
-    analogWrite(forwardLeft, 62);
-    analogWrite(forwardRight, 255);
-    analogWrite(reverseLeft, 0);
-    analogWrite(reverseRight, 0);
-  } else if(msg.angular.z < 0){
-    analogWrite(forwardLeft, 255);
-    analogWrite(forwardRight, 62);
-    analogWrite(reverseLeft, 0);
-    analogWrite(reverseRight, 0);
-  } else if(msg.linear.x == 0 && msg.angular.z == 0){
-    analogWrite(forwardLeft, 0);
-    analogWrite(forwardRight, 0);
-    analogWrite(reverseLeft, 0);
-    analogWrite(reverseRight, 0);
+    goBackward();
+  }  else if(msg.angular.z > 0) {
+    goLeft();
+  } else if(msg.angular.z < 0) {
+    goRight();
+  } else if(msg.linear.x == 0 && msg.angular.z == 0) {
+    stopMoving();
   }
   
 }
 
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel", &messageCb );
 
-void setup()
-{ 
+
+void setup() { 
   pinMode(forwardLeft, OUTPUT);
   pinMode(forwardRight, OUTPUT);
   pinMode(reverseLeft, OUTPUT);
@@ -88,34 +132,22 @@ void setup()
   time = millis();
 }
 
-void loop()
-{    
+void loop() {    
   nh.spinOnce();
-  digitalWrite(triggerPin, LOW);
-//    delayMicroseconds(2);
-////// Sets the trigPin on HIGH state for 10 micro seconds
-//  digitalWrite(triggerPin, HIGH);
-//  delayMicroseconds(10);
-//  digitalWrite(triggerPin, LOW);
-////// Reads the echoPin, returns the sound wave travel time in microseconds
-//  double duration = pulseIn(echoPin, HIGH);
-////// Calculating the distance
-//  double distance= duration*0.034/2;
-//  
-//  if (distance >= 5) {
-//    digitalWrite(enableLeft, LOW);
-//    digitalWrite(enableRight, LOW);
-//  }  
+  
+  
+  distance = measureDistanceCm(triggerPin, echoPin);
+  if(distance < 5) {
+      stopMoving();
+  }
 }
 
-ISR(timer1Event)
-{
-    analogWrite(forwardLeft, 0);
-    analogWrite(forwardRight, 0);
-    analogWrite(reverseLeft, 0);
-    analogWrite(reverseRight, 0);
+ISR(timer1Event){
+  stopMoving();
   
   digitalWrite(13, HIGH);
   resetTimer1(); //reset timer1
 }
+
+
 
